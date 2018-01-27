@@ -1,13 +1,21 @@
 ﻿<Properties StartupItem="Assembly-CSharp.csproj">
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" PreferredExecutionTarget="Unity.Instance.Unity Editor" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Scripts\parallax.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets\Scripts\Player.cs">
     <Files>
-      <File FileName="Assets\Scripts\Player.cs" Line="33" Column="24" />
-      <File FileName="Assets\Scripts\parallax.cs" Line="27" Column="85" />
+      <File FileName="Assets\Scripts\Player.cs" Line="95" Column="3" />
+      <File FileName="Assets\Scripts\Manager.cs" Line="37" Column="1" />
+      <File FileName="Assets\Scripts\jeux1\Animal.cs" Line="13" Column="23" />
+      <File FileName="Assets\Scripts\jeux1\Spawn.cs" Line="7" Column="1" />
+      <File FileName="Assets\Scripts\jeux2\Pinguin.cs" Line="11" Column="19" />
+      <File FileName="Assets\Scripts\jeux1\compteur.cs" Line="5" Column="22" />
+      <File FileName="Assets\Scripts\jeux1\SpawnPomme.cs" Line="35" Column="1" />
+      <File FileName="Assets\Scripts\jeux1\Pomme.cs" Line="8" Column="1" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
-    <BreakpointStore />
+    <BreakpointStore>
+      <Breakpoint file="C:\Users\a.re\Documents\git\globalJam\Assets\Scripts\jeux1\Spawn.cs" line="17" column="1" />
+    </BreakpointStore>
   </MonoDevelop.Ide.DebuggingService.Breakpoints>
   <MonoDevelop.Ide.DebuggingService.PinnedWatches />
 </Properties>

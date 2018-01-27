@@ -7,11 +7,18 @@ public class Pinguin : MonoBehaviour
 	public float MoveSpeed;
 	Rigidbody2D currRig;
 
+	Vector3 getPos;
 	bool run = false;
 
-	void Awake ()
+	void Awake ( )
 	{
 		currRig = GetComponent<Rigidbody2D> ();
+		getPos = transform.localPosition;
+	}
+
+	void OnEnable ()
+	{
+		transform.localPosition = getPos;
 	}
 	
 	void Update () 

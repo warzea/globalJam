@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using DG.Tweening;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class Player : MonoBehaviour 
 {
@@ -21,6 +22,7 @@ public class Player : MonoBehaviour
 	[HideInInspector]
 	public bool StopPlayer = false;
 
+	Animator getAnimator;
 	Transform currTrans;
 	Rigidbody2D currRig;
 
@@ -32,6 +34,7 @@ public class Player : MonoBehaviour
 
 	string currTag;
 
+	bool onObstacle = false;
 	bool onGround = false;
 	bool useJump = false;
 	bool canTakeDmg = true;
@@ -42,6 +45,7 @@ public class Player : MonoBehaviour
 		currRig = GetComponent<Rigidbody2D> ();
 		currTrans = transform;
 		getEnumPos = getPos ();
+		getAnimator = GetComponent<Animator> ();
 	}
 	
 	// Update is called once per frame
@@ -59,14 +63,22 @@ public class Player : MonoBehaviour
 			onAir = 0.5f;
 		}
 
+		if (getAxe == 0) 
+		{
+			getAnimator.SetBool ("Walk", false);
+			getAnimator.SetBool ("Run", false);
+		}
+
 		if (getAxe > 0) {
 			//currTrans.localPosition += Vector3.right * MoveSpeed * Time.deltaTime;
+			getAnimator.SetBool ("Walk", true);
 			if (CurrHist == 1) 
 			{
 				SecondJeu.UpdateRight (currTrans);
 			}
 			currRig.AddForce (Vector3.right * MoveSpeed * Time.deltaTime * onAir);
 		} else if (getAxe < 0) {
+			getAnimator.SetBool ("Walk", true);
 			//currTrans.localPosition -= Vector3.right * MoveSpeed * Time.deltaTime;
 			if (CurrHist == 1) 
 			{
@@ -77,6 +89,15 @@ public class Player : MonoBehaviour
 		else if (onGround && currTag == "StandardGround") 
 		{
 			currRig.velocity *= (1 - Time.deltaTime * 5);
+		}
+
+		if ((100 * Mathf.Abs (currRig.velocity.x) / MaxSpeed) > 70 && getAxe != 0) 
+		{
+			getAnimator.SetBool ("Run", true);
+		}
+		else 
+		{
+			getAnimator.SetBool ("Run", false);
 		}
 
 		if ( Mathf.Abs ( currRig.velocity.x ) > MaxSpeed) 
@@ -123,14 +144,20 @@ public class Player : MonoBehaviour
 		} 
 		else 
 		{
-			if (CurrHist == 0) 
+			GetComponent<SpriteRenderer> ().DOFade (0, 0.2f).OnComplete (() => {
+				GetComponent<SpriteRenderer> ().DOFade (1, 0.2f);
+			});
+
+			if (!onObstacle) 
 			{
+				onObstacle = false;
 				canTakeDmg = true;
 				StopPlayer = false;
-				getEnumPos = getPos();
+				getEnumPos = getPos ();
+				StartCoroutine (getEnumPos);
 				currRig.bodyType = RigidbodyType2D.Dynamic;
 				return;
-			}
+			} 
 
 			Vector3 getBack;
 			if (Vector2.Distance (newPos, currTrans.localPosition) < 3) 
@@ -218,6 +245,16 @@ public class Player : MonoBehaviour
 		{
 			takeDamage ();
 		}
+		else if (thisCol.gameObject.tag == "Obsacle") 
+		{
+			onObstacle = true;
+			takeDamage ();
+		}
+		else if (thisCol.gameObject.tag == "Pomme") 
+		{
+			FirstGame.GetComponent<compteur> ().NewPomme ();
+			Destroy (thisCol.gameObject);
+		}
 	}
 
 	void OnTriggerEnter2D ( Collider2D currCol )
@@ -244,6 +281,8 @@ public class Player : MonoBehaviour
 		if (CurrHist == 0) 
 		{
 			FirstGame.SetActive (true);
+			FirstGame.GetComponent<compteur> ().Reset ();
+
 			DOVirtual.DelayedCall (1, () => {
 				foreach ( Spawn thisSpawn in FirstGame.GetComponentsInChildren<Spawn>())
 				{
