@@ -8,12 +8,16 @@ public class EndCourse : MonoBehaviour
 	{
 		if (currCol.tag == "Player") 
 		{
+			foreach (SpawnPinguin thisSP in Manager.MainManager.getCam.GetComponentsInChildren<SpawnPinguin>()) {
+				thisSP.StopSpawn ();
+
+				Destroy ( thisSP.gameObject );
+			}
+
+			foreach (Pinguin thisPin in Manager.MainManager.getCam.GetComponentsInChildren<Pinguin>()) {
+				Destroy ( thisPin.gameObject );
+			}
 			Manager.MainManager.StartDialogue ();
 		} 
-		else if ( currCol.tag =="Pinguin")
-		{
-			Manager.MainManager.currHistory--;
-			Manager.MainManager.StartDialogue ();
-		}
 	}
 }

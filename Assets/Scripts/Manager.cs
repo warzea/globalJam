@@ -7,74 +7,211 @@ using DG.Tweening;
 public class Manager : MonoBehaviour 
 {
 	public static Manager MainManager;
+	public Image BlackScreen;
 	public Transform CurrPlayer;
 	public Transform TargetHistory;
 	public GameObject Dialogue;
 	public Text PapyDialogue;
+	public AudioClip PapyStory;
+	public Animator EnfantAnim;
 
 	public HistoryInfo[] AllHistory;
+	public Transform ChildHist;
 
 	[HideInInspector]
 	public int currHistory = 0;
 
 	int currDialogue = 0;
+	float getOrtho;
 	bool onDialogue = false;
+	bool sleep = false;
 
 	Player getPlayer;
+	AudioSource getAudio;
+	public Camera getCam;
 
 	void Awake () 
 	{
+		getAudio = GetComponent<AudioSource> ();
 		MainManager = this;
-		Dialogue.SetActive (false);
 		getPlayer = CurrPlayer.GetComponent<Player> ();
-		StartDialogue ();
+		getOrtho = getCam.orthographicSize;
+		getAudio.clip = PapyStory;
+		getAudio.Play();
+		CurrPlayer.GetComponent<Rigidbody2D> ().bodyType = RigidbodyType2D.Kinematic;
+		getPlayer.StopPlayer = true;
+		getCam.transform.position = TargetHistory.position; 
+		getCam.transform.localPosition = new Vector3 (getCam.transform.localPosition.x, getCam.transform.localPosition.y, -10);
+
+		Dialogue.SetActive(true);
+
+		onDialogue = false;
+		PapyDialogue.DOText ( AllHistory [currHistory].DialogueHist [currDialogue], 1 ).OnComplete(()=>
+		{
+			onDialogue = true;
+			currDialogue++;
+		});
 	}
 
 	public void StartDialogue ( )
 	{
+		getCam.GetComponent<followPlayer>().FollowX = false;
+		getCam.GetComponent<followPlayer>().FollowY = false;
+		getAudio.DOPitch (0, 0.5f).OnComplete (() => {
+			getAudio.clip = PapyStory;
+			getAudio.Play();
+			getAudio.DOPitch(1, 0.5f);
+		});
+
+
+
+		BlackScreen.DOKill ();
+		BlackScreen.DOFade (1, 0.3f);
 		getPlayer.StopPlayer = true;
+
+
 		CurrPlayer.GetComponent<Rigidbody2D> ().bodyType = RigidbodyType2D.Kinematic; 
-		CurrPlayer.DOMove (TargetHistory.position, 1).OnComplete (() => 
-		{
+		CurrPlayer.GetComponent<Rigidbody2D> ().velocity = Vector3.zero;
+
+		getCam.transform.DOMove ( CurrPlayer.position, 0.3f );
+		getCam.DOOrthoSize (0, 0.3f).OnComplete (() => {
+			getCam.transform.position = TargetHistory.position; 
+			getCam.transform.localPosition = new Vector3 (getCam.transform.localPosition.x, getCam.transform.localPosition.y, -10);
+
+			BlackScreen.DOFade (0, 0.3f);
+				
+			getCam.DOOrthoSize (getOrtho, 0.3f).OnComplete (() => {
 				Dialogue.SetActive(true);
 
 				onDialogue = true;
 
 				PapyDialogue.text = AllHistory[currHistory].DialogueHist[currDialogue];
-				currDialogue ++;
-		});
-	}
 
+				currDialogue ++;
+			});
+		});;
+	}
+		
 	void endDialogue ( )
 	{
 		getPlayer.NewScene ();
-		CurrPlayer.DOMove (AllHistory [currHistory].PosGameplay.position, 1).OnComplete (() => 
-		{
-			getPlayer.StopPlayer = false;
-			CurrPlayer.GetComponent<Rigidbody2D> ().bodyType = RigidbodyType2D.Dynamic; 
+
+		getAudio.DOPitch (0, 0.5f).OnComplete (() => {
+			getAudio.clip = AllHistory [currHistory].ClipGameplay;
+			getAudio.Play();
+			getAudio.DOPitch(1, 0.5f);
 		});
+
+		BlackScreen.DOKill ();
+		BlackScreen.DOFade (1, 0.3f);
+
+		getCam.transform.DOMove ( ChildHist.position, 0.3f );
+		getCam.DOOrthoSize (0, 0.3f).OnComplete (() => {
+			getCam.transform.DOKill();
+			CurrPlayer.position = AllHistory [currHistory].PosGameplay.position;
+			getCam.transform.localPosition =new Vector3 (  AllHistory [currHistory].PosGameplay.position.x,  AllHistory [currHistory].PosGameplay.position.y, -10);
+			getPlayer.glisse = false;
+			getPlayer.JumpForce = 250;
+
+			if ( currHistory == 0 )
+			{
+				//getCam.transform.localPosition = new Vector3(0,0,-10);
+				//getCam.transform.SetParent(null);
+				getCam.GetComponent<followPlayer>().FollowX = false;
+				getCam.GetComponent<followPlayer>().FollowY = false;
+			}
+			else if ( currHistory == 1 )
+			{
+				getPlayer.JumpForce = 175;
+				getPlayer.glisse = true;
+				getCam.transform.localPosition = new Vector3( getCam.transform.localPosition.x, 1, -10);
+				//getCam.transform.SetParent(getPlayer.transform);
+				//getCam.transform.localPosition = new Vector3(0,1.1f,-10);
+				getCam.GetComponent<followPlayer>().FollowX = true;
+				getCam.GetComponent<followPlayer>().FollowY = false;
+			}
+			else
+			{
+				//getCam.transform.SetParent(getPlayer.transform);
+				//getCam.transform.localPosition = new Vector3(0,0,-10);
+				getCam.GetComponent<followPlayer>().FollowX = false;
+				getCam.GetComponent<followPlayer>().FollowY = true;
+			}
+
+			currHistory++;
+
+			if (currHistory > AllHistory.Length - 1) 
+			{
+				currHistory = 0;
+			}
+
+			EnfantAnim.SetBool ("startSleep", false);
+			EnfantAnim.SetBool ("sleep", false);
+
+			BlackScreen.DOFade (0, 0.3f);
+			getCam.DOOrthoSize (getOrtho, 0.3f).OnComplete (() => {
+				getPlayer.StopPlayer = false;
+				CurrPlayer.GetComponent<Rigidbody2D> ().bodyType = RigidbodyType2D.Dynamic; 
+			});
+		});;
 	}
 
 	void Update ()
 	{
-		if ( Input.GetKeyDown(KeyCode.Return) && onDialogue ) 
+		if ( Input.anyKeyDown && onDialogue ) 
 		{
-			if (AllHistory [currHistory].DialogueHist.Length > currDialogue) {
-				PapyDialogue.text = AllHistory [currHistory].DialogueHist [currDialogue];
-				currDialogue++;
+			if (AllHistory [currHistory].DialogueHist.Length - 1> currDialogue) 
+			{
+				onDialogue = false;
+
+				if (Random.Range (0, 2) == 0 && currDialogue > 1 && !sleep) {
+					sleep = true;
+					//getCam.DOOrthoSize (getOrtho * 0.5f, 0.35f);
+					//getCam.transform.DOLocalMoveY(getCam.transform.localPosition.y + 0.1f, 0.3f); 
+
+					EnfantAnim.SetBool ("startSleep", true);
+
+					BlackScreen.DOFade (0.5f, 0.5f).OnComplete (() => {
+						//getCam.DOOrthoSize (getOrtho, 0.2f);
+						//getCam.transform.DOLocalMoveY (getCam.transform.localPosition.y - 0.1f, 0.2f); 
+						BlackScreen.DOFade (0, 0.5f);
+						EnfantAnim.SetBool ("startSleep", false);
+						PapyDialogue.text = string.Empty;
+
+						PapyDialogue.DOText(AllHistory [currHistory].DialogueHist [currDialogue], 1 ).OnComplete(()=>
+						{
+							onDialogue = true;
+							currDialogue++;
+						});
+					});
+				} 
+				else 
+				{
+					EnfantAnim.SetBool ("startSleep", false);
+					sleep = false;
+					PapyDialogue.text = string.Empty;
+					PapyDialogue.DOText ( AllHistory [currHistory].DialogueHist [currDialogue], 1 ).OnComplete(()=>
+					{
+						onDialogue = true;
+						currDialogue++;
+					});
+				}
 			}
 			else 
 			{
-				Dialogue.SetActive(false);
 				onDialogue = false;
-				currDialogue = 0;
-				endDialogue ();
-				currHistory++;
+				PapyDialogue.text = AllHistory [currHistory].DialogueHist [currDialogue ];
+				sleep = false;
+				EnfantAnim.SetBool ("sleep", true);
 
-				if (currHistory > AllHistory.Length - 1) 
+				DOVirtual.DelayedCall(2, ()=>
 				{
-					currHistory = 0;
-				}
+					Dialogue.SetActive(false);
+					currDialogue = 0;
+					endDialogue ();
+
+				});
+				
 			}
 		}
 	}
@@ -85,4 +222,5 @@ public class HistoryInfo
 {
 	public string[] DialogueHist;
 	public Transform PosGameplay;
+	public AudioClip ClipGameplay;
 }

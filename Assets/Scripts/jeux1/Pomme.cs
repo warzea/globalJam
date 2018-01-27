@@ -4,9 +4,16 @@ using UnityEngine;
 
 public class Pomme : MonoBehaviour 
 {
-	public float LifeTime;
 	void Awake () 
 	{
-		Destroy (gameObject, LifeTime);
+		Destroy (gameObject, 10);
+	}
+
+	void OnCollisionEnter2D ( Collision2D thisCol )
+	{
+		if (thisCol.gameObject.layer == 9) 
+		{
+			Destroy (gameObject, 2);
+		}
 	}
 }

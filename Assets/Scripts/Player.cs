@@ -13,6 +13,7 @@ public class Player : MonoBehaviour
 	public parallax SecondJeu;
 	public GameObject FirstGame;
 	public GameObject ThirdGame;
+	public ThoseBack[] Montagne;
 
 	public int Life = 3;
 
@@ -39,6 +40,8 @@ public class Player : MonoBehaviour
 	bool useJump = false;
 	bool canTakeDmg = true;
 
+	float getDist;
+	public bool glisse = false;
 	// Use this for initialization
 	void Awake () 
 	{
@@ -47,20 +50,38 @@ public class Player : MonoBehaviour
 		getEnumPos = getPos ();
 		getAnimator = GetComponent<Animator> ();
 	}
-	
+
 	// Update is called once per frame
 	void Update () 
 	{
 		if (StopPlayer) 
 		{
+			getAnimator.SetBool ("Walk", false);
+			getAnimator.SetBool ("Run", false);
 			return;
 		}
+
 		float getAxe = Input.GetAxis ("Horizontal");
 		float onAir = 1;
 
-		if (!onGround || currTag == "SnowGround")
+		if (!onGround) {
+
+		} 
+
+		if ( glisse )
+		{
+			getAnimator.SetBool ( "Glisse", true );
+			onAir = 0.35f;
+		}
+		else if ( !onGround)
 		{
 			onAir = 0.5f;
+		}
+
+		if (CurrHist == 2) 
+		{
+			checkPos (getDist - currTrans.localPosition.x);
+			getDist = currTrans.localPosition.x;
 		}
 
 		if (getAxe == 0) 
@@ -71,16 +92,19 @@ public class Player : MonoBehaviour
 
 		if (getAxe > 0) {
 			//currTrans.localPosition += Vector3.right * MoveSpeed * Time.deltaTime;
+			currTrans.localScale = new Vector3 ( 1,1,1);
 			getAnimator.SetBool ("Walk", true);
-			if (CurrHist == 1) 
+			if (CurrHist == 2) 
 			{
 				SecondJeu.UpdateRight (currTrans);
 			}
 			currRig.AddForce (Vector3.right * MoveSpeed * Time.deltaTime * onAir);
 		} else if (getAxe < 0) {
+			currTrans.localScale = new Vector3 ( -1,1,1);
+
 			getAnimator.SetBool ("Walk", true);
 			//currTrans.localPosition -= Vector3.right * MoveSpeed * Time.deltaTime;
-			if (CurrHist == 1) 
+			if (CurrHist == 2) 
 			{
 				SecondJeu.UpdateLeft (currTrans);
 			}
@@ -121,6 +145,44 @@ public class Player : MonoBehaviour
 		}
 	}
 
+	float speed = 0.25f;
+	void checkPos ( float newPos )
+	{
+		if ( newPos == 0 )
+		{
+			return;
+		}
+		if ( newPos > 0 )
+		{
+			speed = -0.25f;
+		}
+		float a = 0;
+		foreach (ThoseBack thisBack in Montagne) 
+		{
+			foreach (Transform thisT in thisBack.BackG) 
+			{
+				thisT.localPosition += new Vector3 (speed * a * Time.deltaTime, 0, 0);
+
+				if (newPos < 0) 
+				{
+					if ( Mathf.Abs ( currTrans.localPosition.x - thisT.localPosition.x ) > 7 && currTrans.localPosition.x > thisT.localPosition.x ) 
+					{
+						thisT.localPosition += new Vector3 (18.66f, 0,0);
+					}
+				} 
+				else if (newPos > 0) 
+				{
+					if ( Mathf.Abs ( currTrans.localPosition.x - thisT.localPosition.x ) > 7 && currTrans.localPosition.x < thisT.localPosition.x ) 
+					{
+						thisT.localPosition -= new Vector3 (18.66f, 0,0);
+					}
+				}
+			}
+
+			a+=0.25f;
+		}
+	}
+
 	void takeDamage ( )
 	{
 		if (!canTakeDmg) 
@@ -134,9 +196,10 @@ public class Player : MonoBehaviour
 		canTakeDmg = false;
 		Life--;
 		StopCoroutine (getEnumPos);
-
 		if (Life == 0) 
 		{
+			Manager.MainManager.BlackScreen.DOFade (1, 1.8f);
+
 			DOVirtual.DelayedCall (2, () => 
 			{
 					SceneManager.LoadScene(SceneManager.GetActiveScene().name);
@@ -144,9 +207,11 @@ public class Player : MonoBehaviour
 		} 
 		else 
 		{
-			GetComponent<SpriteRenderer> ().DOFade (0, 0.2f).OnComplete (() => {
-				GetComponent<SpriteRenderer> ().DOFade (1, 0.2f);
+			GetComponent<SpriteRenderer> ().DOFade (0, 0.3f).OnComplete (() => {
+				GetComponent<SpriteRenderer> ().DOFade (1, 0.3f);
 			});
+
+			StartCoroutine (getDmg ());
 
 			if (!onObstacle) 
 			{
@@ -239,19 +304,36 @@ public class Player : MonoBehaviour
 		StartCoroutine (getEnumPos);
 	}
 
+	IEnumerator getDmg()
+	{
+		yield return new WaitForSeconds (1);
+
+		waitDmg = true;
+	}
+
+	bool waitDmg = true;
 	void OnCollisionEnter2D ( Collision2D thisCol )
 	{
+		if (!waitDmg) {
+			return;
+		}
 		if (thisCol.gameObject.tag == "Ennemis") 
 		{
+			waitDmg = false;
 			takeDamage ();
+			Physics2D.IgnoreCollision (GetComponent<Collider2D> (), thisCol.gameObject.GetComponent<Collider2D>(), true);
 		}
 		else if (thisCol.gameObject.tag == "Obsacle") 
 		{
 			onObstacle = true;
+			waitDmg = false;
 			takeDamage ();
+
+			Physics2D.IgnoreCollision (GetComponent<Collider2D> (), thisCol.gameObject.GetComponent<Collider2D>(), true);
 		}
 		else if (thisCol.gameObject.tag == "Pomme") 
 		{
+			Physics2D.IgnoreCollision (GetComponent<Collider2D> (), thisCol.gameObject.GetComponent<Collider2D>(), true);
 			FirstGame.GetComponent<compteur> ().NewPomme ();
 			Destroy (thisCol.gameObject);
 		}
@@ -278,6 +360,8 @@ public class Player : MonoBehaviour
 
 	public void NewScene ( )
 	{
+		Life = 3;
+		getDist = currTrans.localPosition.x;
 		if (CurrHist == 0) 
 		{
 			FirstGame.SetActive (true);
@@ -285,6 +369,11 @@ public class Player : MonoBehaviour
 
 			DOVirtual.DelayedCall (1, () => {
 				foreach ( Spawn thisSpawn in FirstGame.GetComponentsInChildren<Spawn>())
+				{
+					thisSpawn.StartSpawn();
+				}
+
+				foreach ( SpawnPomme thisSpawn in FirstGame.GetComponentsInChildren<SpawnPomme>())
 				{
 					thisSpawn.StartSpawn();
 				}
@@ -304,4 +393,10 @@ public class Player : MonoBehaviour
 
 		CurrHist++;
 	}
+}
+
+[System.Serializable]
+public class ThoseBack
+{
+	public Transform[] BackG;
 }

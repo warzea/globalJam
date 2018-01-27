@@ -5,11 +5,14 @@ using UnityEngine;
 public class Animal : MonoBehaviour 
 {
 	public bool GoRight;
-	public float MoveSpeed = 10;
+	public float MoveSpeedMin;
+	public float MaxMoveSpeed;
 	Transform getTrans;
 	// Use this for initialization
+	float MoveSpeed;
 	void Awake () 
 	{
+		MoveSpeed = Random.Range (MoveSpeedMin, MaxMoveSpeed);
 		getTrans = transform;
 		Destroy (gameObject, 10);
 	}

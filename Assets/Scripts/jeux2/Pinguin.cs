@@ -4,36 +4,31 @@ using UnityEngine;
 
 public class Pinguin : MonoBehaviour 
 {
-	public float MoveSpeed;
-	Rigidbody2D currRig;
+	public float MoveSpeedMin;
+	public float MaxMoveSpeed;
+	Transform currTrans;
 
-	Vector3 getPos;
-	bool run = false;
+	public bool GoRight = false;
+	public float Dest = 7;
 
+	float MoveSpeed;
 	void Awake ( )
 	{
-		currRig = GetComponent<Rigidbody2D> ();
-		getPos = transform.localPosition;
+		MoveSpeed = Random.Range (MoveSpeedMin, MaxMoveSpeed);
+		//currRig = GetComponent<Rigidbody2D> ();
+		currTrans = transform;
+		Destroy (gameObject, Dest);
 	}
 
-	void OnEnable ()
-	{
-		transform.localPosition = getPos;
-	}
-	
 	void Update () 
 	{
-		if (run) 
-		{
-			currRig.AddForce (Vector3.right * MoveSpeed * Time.deltaTime);
+		if (!GoRight) {
+			//currRig.AddForce (Vector3.right * MoveSpeed * Time.deltaTime);
+			currTrans.localPosition += Vector3.right * MoveSpeed * Time.deltaTime;
 		}
-	}
-
-	void OnTriggerEnter2D ( Collider2D currCol )
-	{
-		if (currCol.tag == "Player") 
-		{
-			run = true;
+		else {
+			currTrans.localPosition -= Vector3.right * MoveSpeed * Time.deltaTime;
+			//currRig.AddForce (-Vector3.right * MoveSpeed * Time.deltaTime);
 		}
 	}
 }
