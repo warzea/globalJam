@@ -6,7 +6,7 @@ using DG.Tweening;
 
 public class Manager : MonoBehaviour 
 {
-	static Manager MainManager;
+	public static Manager MainManager;
 	public Transform CurrPlayer;
 	public Transform TargetHistory;
 	public GameObject Dialogue;
@@ -14,9 +14,9 @@ public class Manager : MonoBehaviour
 
 	public HistoryInfo[] AllHistory;
 
-	Vector3 savePos;
+	[HideInInspector]
+	public int currHistory = 0;
 
-	int currHistory = 0;
 	int currDialogue = 0;
 	bool onDialogue = false;
 
@@ -33,7 +33,6 @@ public class Manager : MonoBehaviour
 	public void StartDialogue ( )
 	{
 		getPlayer.StopPlayer = true;
-		savePos = CurrPlayer.position;
 		CurrPlayer.GetComponent<Rigidbody2D> ().bodyType = RigidbodyType2D.Kinematic; 
 		CurrPlayer.DOMove (TargetHistory.position, 1).OnComplete (() => 
 		{
@@ -48,7 +47,8 @@ public class Manager : MonoBehaviour
 
 	void endDialogue ( )
 	{
-		CurrPlayer.DOMove (savePos /*AllHistory [currHistory].PosGameplay.position*/, 1).OnComplete (() => 
+		getPlayer.NewScene ();
+		CurrPlayer.DOMove (AllHistory [currHistory].PosGameplay.position, 1).OnComplete (() => 
 		{
 			getPlayer.StopPlayer = false;
 			CurrPlayer.GetComponent<Rigidbody2D> ().bodyType = RigidbodyType2D.Dynamic; 
@@ -84,5 +84,5 @@ public class Manager : MonoBehaviour
 public class HistoryInfo 
 {
 	public string[] DialogueHist;
-	//public Transform PosGameplay;
+	public Transform PosGameplay;
 }

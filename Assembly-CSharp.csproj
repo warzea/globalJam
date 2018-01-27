@@ -51,9 +51,13 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-     <Compile Include="Assets\Scripts\Collectable.cs" />
+     <Compile Include="Assets\Scripts\jeux1\Animal.cs" />
+     <Compile Include="Assets\Scripts\jeux1\Spawn.cs" />
+     <Compile Include="Assets\Scripts\jeux2\Collectable.cs" />
+     <Compile Include="Assets\Scripts\jeux2\EndCourse.cs" />
+     <Compile Include="Assets\Scripts\jeux2\parallax.cs" />
+     <Compile Include="Assets\Scripts\jeux2\Pinguin.cs" />
      <Compile Include="Assets\Scripts\Manager.cs" />
-     <Compile Include="Assets\Scripts\parallax.cs" />
      <Compile Include="Assets\Scripts\Player.cs" />
      <None Include="Assets\Plugings\DOTween\DOTween50.xml" />
      <None Include="Assets\Plugings\DOTween\DOTween43.xml" />

@@ -9,9 +9,14 @@ public class Player : MonoBehaviour
 	public float MaxSpeed = 10;
 	public float MoveSpeed = 10;
 	public float JumpForce = 10;
-	public parallax GetParallax;
+	public parallax SecondJeu;
+	public GameObject FirstGame;
+	public GameObject ThirdGame;
 
 	public int Life = 3;
+
+	[HideInInspector]
+	public int CurrHist = 0;
 
 	[HideInInspector]
 	public bool StopPlayer = false;
@@ -37,7 +42,6 @@ public class Player : MonoBehaviour
 		currRig = GetComponent<Rigidbody2D> ();
 		currTrans = transform;
 		getEnumPos = getPos ();
-		StartCoroutine(getEnumPos);
 	}
 	
 	// Update is called once per frame
@@ -57,11 +61,17 @@ public class Player : MonoBehaviour
 
 		if (getAxe > 0) {
 			//currTrans.localPosition += Vector3.right * MoveSpeed * Time.deltaTime;
-			GetParallax.UpdateRight (currTrans);
+			if (CurrHist == 1) 
+			{
+				SecondJeu.UpdateRight (currTrans);
+			}
 			currRig.AddForce (Vector3.right * MoveSpeed * Time.deltaTime * onAir);
 		} else if (getAxe < 0) {
 			//currTrans.localPosition -= Vector3.right * MoveSpeed * Time.deltaTime;
-			GetParallax.UpdateLeft (currTrans);
+			if (CurrHist == 1) 
+			{
+				SecondJeu.UpdateLeft (currTrans);
+			}
 			currRig.AddForce (-Vector3.right * MoveSpeed * Time.deltaTime * onAir);
 		} 
 		else if (onGround && currTag == "StandardGround") 
@@ -96,6 +106,7 @@ public class Player : MonoBehaviour
 		{
 			return;
 		}
+
 		currRig.velocity = Vector3.zero;
 		currRig.bodyType = RigidbodyType2D.Kinematic;
 		StopPlayer = true;
@@ -112,6 +123,15 @@ public class Player : MonoBehaviour
 		} 
 		else 
 		{
+			if (CurrHist == 0) 
+			{
+				canTakeDmg = true;
+				StopPlayer = false;
+				getEnumPos = getPos();
+				currRig.bodyType = RigidbodyType2D.Dynamic;
+				return;
+			}
+
 			Vector3 getBack;
 			if (Vector2.Distance (newPos, currTrans.localPosition) < 3) 
 			{
@@ -152,11 +172,11 @@ public class Player : MonoBehaviour
 			yield return thisF;
 			if (right)
 			{
-				GetParallax.UpdateRight (currTrans);
+				SecondJeu.UpdateRight (currTrans);
 			} 
 			else 
 			{
-				GetParallax.UpdateLeft (currTrans);
+				SecondJeu.UpdateLeft (currTrans);
 			}
 
 		}
@@ -217,5 +237,32 @@ public class Player : MonoBehaviour
 		{
 			onGround = false;
 		}	
+	}
+
+	public void NewScene ( )
+	{
+		if (CurrHist == 0) 
+		{
+			FirstGame.SetActive (true);
+			DOVirtual.DelayedCall (1, () => {
+				foreach ( Spawn thisSpawn in FirstGame.GetComponentsInChildren<Spawn>())
+				{
+					thisSpawn.StartSpawn();
+				}
+			});
+		} 
+		else if (CurrHist == 1) 
+		{
+			FirstGame.SetActive (false);
+			SecondJeu.gameObject.SetActive (true);
+			StartCoroutine(getEnumPos);
+		}
+		else if (CurrHist == 2) 
+		{
+			SecondJeu.gameObject.SetActive (false);
+			ThirdGame.gameObject.SetActive (true);
+		}
+
+		CurrHist++;
 	}
 }
