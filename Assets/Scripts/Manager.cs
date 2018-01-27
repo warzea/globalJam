@@ -25,6 +25,7 @@ public class Manager : MonoBehaviour
 	float getOrtho;
 	bool onDialogue = false;
 	bool sleep = false;
+	bool jeuTermine = false;
 
 	Player getPlayer;
 	AudioSource getAudio;
@@ -142,6 +143,7 @@ public class Manager : MonoBehaviour
 
 			if (currHistory > AllHistory.Length - 1) 
 			{
+				jeuTermine = true;
 				currHistory = 0;
 			}
 
@@ -158,6 +160,11 @@ public class Manager : MonoBehaviour
 
 	void Update ()
 	{
+		if ( jeuTermine )
+		{
+			PapyDialogue.text = "Allez, c'est l'heure d'allez dormir...";
+			return;
+		}
 		if ( Input.anyKeyDown && onDialogue ) 
 		{
 			if (AllHistory [currHistory].DialogueHist.Length - 1> currDialogue) 
