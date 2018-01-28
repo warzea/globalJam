@@ -8,6 +8,8 @@ TagManager:
   - SnowGround
   - Ennemis
   - Pomme
+  - punch
+  - sword
   layers:
   - Default
   - TransparentFX

@@ -13,6 +13,7 @@ public class Player : MonoBehaviour
 	public parallax SecondJeu;
 	public GameObject FirstGame;
 	public GameObject ThirdGame;
+	public GameObject FourthGame;
 	public ThoseBack[] Montagne;
 
 	public int Life = 3;
@@ -32,9 +33,10 @@ public class Player : MonoBehaviour
 
 	Vector3 lastPos;
 	Vector3 newPos;
-
+	GameObject getObjChild;
 	string currTag;
 
+	bool escalade = false;
 	bool onObstacle = false;
 	bool onGround = false;
 	bool useJump = false;
@@ -45,6 +47,7 @@ public class Player : MonoBehaviour
 	// Use this for initialization
 	void Awake () 
 	{
+		getObjChild = transform.GetChild (0).gameObject;
 		currRig = GetComponent<Rigidbody2D> ();
 		currTrans = transform;
 		getEnumPos = getPos ();
@@ -54,6 +57,10 @@ public class Player : MonoBehaviour
 	// Update is called once per frame
 	void Update () 
 	{
+		if (Input.GetButtonDown ("Fire1") && !escalade && !glisse ) 
+		{
+			getAnimator.SetTrigger ("punch");
+		}
 		if (StopPlayer) 
 		{
 			getAnimator.SetBool ("Walk", false);
@@ -61,17 +68,15 @@ public class Player : MonoBehaviour
 			return;
 		}
 
+
+
 		float getAxe = Input.GetAxis ("Horizontal");
 		float onAir = 1;
-
-		if (!onGround) {
-
-		} 
 
 		if ( glisse )
 		{
 			getAnimator.SetBool ( "Glisse", true );
-			onAir = 0.35f;
+			onAir = 0.45f;
 		}
 		else if ( !onGround)
 		{
@@ -84,16 +89,23 @@ public class Player : MonoBehaviour
 			getDist = currTrans.localPosition.x;
 		}
 
-		if (getAxe == 0) 
+		if (getAxe == 0 ) 
 		{
 			getAnimator.SetBool ("Walk", false);
 			getAnimator.SetBool ("Run", false);
+
+			if (escalade) 
+			{
+				currRig.velocity = new Vector2 ( 0, currRig.velocity.y );
+			}
 		}
 
 		if (getAxe > 0) {
 			//currTrans.localPosition += Vector3.right * MoveSpeed * Time.deltaTime;
 			currTrans.localScale = new Vector3 ( 1,1,1);
-			getAnimator.SetBool ("Walk", true);
+			if (!escalade) {
+				getAnimator.SetBool ("Walk", true);
+			}
 			if (CurrHist == 2) 
 			{
 				SecondJeu.UpdateRight (currTrans);
@@ -102,7 +114,9 @@ public class Player : MonoBehaviour
 		} else if (getAxe < 0) {
 			currTrans.localScale = new Vector3 ( -1,1,1);
 
-			getAnimator.SetBool ("Walk", true);
+			if (!escalade) {
+				getAnimator.SetBool ("Walk", true);
+			}
 			//currTrans.localPosition -= Vector3.right * MoveSpeed * Time.deltaTime;
 			if (CurrHist == 2) 
 			{
@@ -124,6 +138,11 @@ public class Player : MonoBehaviour
 			getAnimator.SetBool ("Run", false);
 		}
 
+		if (escalade && currRig.velocity.y > MaxSpeed * 0.25f) 
+		{
+			currRig.velocity = new Vector2 ( currRig.velocity.x, MaxSpeed * 0.25f );
+		}
+
 		if ( Mathf.Abs ( currRig.velocity.x ) > MaxSpeed) 
 		{
 			if (currRig.velocity.x < 0)
@@ -136,7 +155,7 @@ public class Player : MonoBehaviour
 			}
 		}
 
-		if (Input.GetButtonDown ("Jump") && !useJump) 
+		if (Input.GetButtonDown ("Jump") && !useJump&& !escalade) 
 		{
 			useJump = true;
 			currEnum = waitJump ();
@@ -198,11 +217,14 @@ public class Player : MonoBehaviour
 		StopCoroutine (getEnumPos);
 		if (Life == 0) 
 		{
-			Manager.MainManager.BlackScreen.DOFade (1, 1.8f);
+			getAnimator.SetTrigger ("dead");
 
-			DOVirtual.DelayedCall (2, () => 
+			DOVirtual.DelayedCall (1, () => 
 			{
-					SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+					Manager.MainManager.BlackScreen.DOFade (1, 1.8f).OnComplete(()=>
+					{
+						SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+					});
 			});
 		} 
 		else 
@@ -348,6 +370,13 @@ public class Player : MonoBehaviour
 			onGround = true;
 			currTag = currCol.tag;
 		}
+
+		if (currCol.gameObject.tag == "sword") {
+			if (waitDmg) {
+				waitDmg = false;
+				takeDamage ();
+			}
+		}
 	}
 
 	void OnTriggerExit2D ( Collider2D currCol )
@@ -361,34 +390,50 @@ public class Player : MonoBehaviour
 	public void NewScene ( )
 	{
 		Life = 3;
+		MaxSpeed = 2;
+		glisse = false;
+		escalade = false;
+		currRig.gravityScale = 1;
 		getDist = currTrans.localPosition.x;
-		if (CurrHist == 0) 
-		{
+		getAnimator.SetBool ("grimp", false);
+		getAnimator.SetBool ("Glisse", false);
+		getAnimator.SetBool ("Walk", false);
+		getAnimator.SetBool ("Run", false);
+		getAnimator.SetBool ("stopGrimp", true);
+
+		if (CurrHist == 0) {
 			FirstGame.SetActive (true);
 			FirstGame.GetComponent<compteur> ().Reset ();
 
 			DOVirtual.DelayedCall (1, () => {
-				foreach ( Spawn thisSpawn in FirstGame.GetComponentsInChildren<Spawn>())
-				{
-					thisSpawn.StartSpawn();
+				foreach (Spawn thisSpawn in FirstGame.GetComponentsInChildren<Spawn>()) {
+					thisSpawn.StartSpawn ();
 				}
 
-				foreach ( SpawnPomme thisSpawn in FirstGame.GetComponentsInChildren<SpawnPomme>())
-				{
-					thisSpawn.StartSpawn();
+				foreach (SpawnPomme thisSpawn in FirstGame.GetComponentsInChildren<SpawnPomme>()) {
+					thisSpawn.StartSpawn ();
 				}
 			});
-		} 
-		else if (CurrHist == 1) 
-		{
+		} else if (CurrHist == 1) {
+			glisse = true;
+			MaxSpeed = 4;
+			getAnimator.SetBool ("Glisse", true);
 			FirstGame.SetActive (false);
 			SecondJeu.gameObject.SetActive (true);
-			StartCoroutine(getEnumPos);
-		}
-		else if (CurrHist == 2) 
-		{
+			StartCoroutine (getEnumPos);
+		} else if (CurrHist == 2) {
+			glisse = false;
+			getAnimator.SetBool ("stopGrimp", false);
+			getAnimator.SetBool ("grimp", true);
 			SecondJeu.gameObject.SetActive (false);
 			ThirdGame.gameObject.SetActive (true);
+			currRig.gravityScale = -1;
+			escalade = true;
+		} 
+		else if (CurrHist == 3)
+		{
+			ThirdGame.gameObject.SetActive (false);
+			FourthGame.gameObject.SetActive (true);
 		}
 
 		CurrHist++;

@@ -9,7 +9,6 @@ public class Pinguin : MonoBehaviour
 	Transform currTrans;
 
 	public bool GoRight = false;
-	public float Dest = 7;
 
 	float MoveSpeed;
 	void Awake ( )
@@ -17,7 +16,7 @@ public class Pinguin : MonoBehaviour
 		MoveSpeed = Random.Range (MoveSpeedMin, MaxMoveSpeed);
 		//currRig = GetComponent<Rigidbody2D> ();
 		currTrans = transform;
-		Destroy (gameObject, Dest);
+		Destroy (gameObject, 20);
 	}
 
 	void Update () 

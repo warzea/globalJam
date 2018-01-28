@@ -11,8 +11,12 @@ public class SpawnPinguin : MonoBehaviour
 
 	IEnumerator getEnum;
 
+	List<GameObject> gets;
+	bool stopSpawn = false;
 	public void StartSpawn ()
 	{
+		gets = new List<GameObject> ();
+		stopSpawn = false;
 		getEnum = respawnPinguin();
 
 		StartCoroutine (getEnum);
@@ -20,8 +24,13 @@ public class SpawnPinguin : MonoBehaviour
 
 	public void StopSpawn ()
 	{
+		stopSpawn = true;
 		if (getEnum != null) {
 			StopCoroutine (getEnum);
+		}
+
+		foreach (GameObject thisIn in gets) {
+			Destroy (thisIn);
 		}
 	}
 
@@ -31,14 +40,18 @@ public class SpawnPinguin : MonoBehaviour
 
 		getEnum = respawnPinguin ();
 
-		GameObject currGo = (GameObject)Instantiate (Pinguin,transform);
-		currGo.transform.localPosition = Vector3.zero;
-		currGo.GetComponent<Pinguin> ().GoRight = Right;
-		if (Right ) 
-		{
-			currGo.transform.localScale = new Vector3 (-1, 1, 1);
-		}
+		if (!stopSpawn) {
+			GameObject currGo = (GameObject)Instantiate (Pinguin);
+			gets.Add (currGo);
+			currGo.transform.position = transform.position;
+			currGo.GetComponent<Pinguin> ().GoRight = Right;
+			if (Right ) 
+			{
+				currGo.transform.localScale = new Vector3 (-1, 1, 1);
+			}
 
-		StartCoroutine (getEnum);
+			StartCoroutine (getEnum);
+		}
+	
 	}
 }

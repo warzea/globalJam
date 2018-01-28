@@ -24,7 +24,7 @@ public class followPlayer : MonoBehaviour
 
 		if ( FollowY )
 		{
-			getT.position = new Vector3 ( getT.position.x, Player.position.y, -10 );
+			getT.position = new Vector3 ( getT.position.x, Player.position.y + 1, -10 );
 		}
 	}
 }

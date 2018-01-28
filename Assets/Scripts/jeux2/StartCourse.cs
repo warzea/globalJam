@@ -17,10 +17,5 @@ public class StartCourse : MonoBehaviour
 				thisSP.StartSpawn ();
 			};
 		} 
-		else if ( currCol.tag =="Pinguin")
-		{
-			Manager.MainManager.currHistory--;
-			Manager.MainManager.StartDialogue ();
-		}
 	}
 }

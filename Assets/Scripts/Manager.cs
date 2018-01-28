@@ -14,7 +14,7 @@ public class Manager : MonoBehaviour
 	public Text PapyDialogue;
 	public AudioClip PapyStory;
 	public Animator EnfantAnim;
-
+	public GameObject Credit;
 	public HistoryInfo[] AllHistory;
 	public Transform ChildHist;
 
@@ -64,7 +64,7 @@ public class Manager : MonoBehaviour
 			getAudio.DOPitch(1, 0.5f);
 		});
 
-
+		CurrPlayer.GetComponent<CapsuleCollider2D> ().enabled = false;
 
 		BlackScreen.DOKill ();
 		BlackScreen.DOFade (1, 0.3f);
@@ -86,7 +86,37 @@ public class Manager : MonoBehaviour
 
 				onDialogue = true;
 
-				PapyDialogue.text = AllHistory[currHistory].DialogueHist[currDialogue];
+				if ( !jeuTermine)
+				{
+					PapyDialogue.text = AllHistory[currHistory].DialogueHist[currDialogue];
+				}
+				else
+				{
+					if ( jeuTermine )
+					{
+						PapyDialogue.DOText ("That's all... After that I came home", 1).OnComplete (() => {
+							DOVirtual.DelayedCall(3, ()=>
+								{
+									PapyDialogue.text = string.Empty;
+									PapyDialogue.DOText ("but the apples were reduced to porridge...",1).OnComplete (() => {
+										DOVirtual.DelayedCall(3, ()=>
+											{
+												PapyDialogue.text = string.Empty;
+
+												PapyDialogue.DOText ("And that’s how I invented apple compote...",1).OnComplete (() => 
+													{
+														DOVirtual.DelayedCall(3, ()=>
+															{
+																Credit.SetActive(true);
+															});
+													});
+											});
+
+									});
+								});
+						});
+					}
+				}
 
 				currDialogue ++;
 			});
@@ -114,7 +144,7 @@ public class Manager : MonoBehaviour
 			getPlayer.glisse = false;
 			getPlayer.JumpForce = 250;
 
-			if ( currHistory == 0 )
+			if ( currHistory == 0 || currHistory == 3 )
 			{
 				//getCam.transform.localPosition = new Vector3(0,0,-10);
 				//getCam.transform.SetParent(null);
@@ -145,7 +175,10 @@ public class Manager : MonoBehaviour
 			{
 				jeuTermine = true;
 				currHistory = 0;
+
+				PapyDialogue.text = string.Empty;
 			}
+
 
 			EnfantAnim.SetBool ("startSleep", false);
 			EnfantAnim.SetBool ("sleep", false);
@@ -153,16 +186,23 @@ public class Manager : MonoBehaviour
 			BlackScreen.DOFade (0, 0.3f);
 			getCam.DOOrthoSize (getOrtho, 0.3f).OnComplete (() => {
 				getPlayer.StopPlayer = false;
-				CurrPlayer.GetComponent<Rigidbody2D> ().bodyType = RigidbodyType2D.Dynamic; 
+				CurrPlayer.GetComponent<CapsuleCollider2D> ().enabled = true;
+
+				CurrPlayer.GetComponent<Rigidbody2D> ().bodyType = RigidbodyType2D.Dynamic;
+
 			});
 		});;
 	}
 
+	bool checkEnd = false;
 	void Update ()
 	{
 		if ( jeuTermine )
 		{
-			PapyDialogue.text = "Allez, c'est l'heure d'allez dormir...";
+			if (!checkEnd) {
+				checkEnd = true;
+			}
+
 			return;
 		}
 		if ( Input.anyKeyDown && onDialogue ) 
